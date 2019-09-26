@@ -1,0 +1,140 @@
+# MediaPlayer
+
+属于framework层
+
+### 1.文件路径
+
+Sdk/sources/android-27/android/media/MediaPlayer.java
+
+### 2. 三种播放路径
+
+- 从资源文件播放
+- 从文件系统播放
+- 从网络播放
+
+### 3. 文件系统播放
+
+```java
+try{
+    MediaPlayer player = new MediaPlayer();
+    player.setDataSource("/sdcsrd/a.mp3");
+    player.prepare();
+    player.start();
+}catch( Exception e){   {
+    e.printStackTrace();
+}
+```
+
+### 4. 网络上播放
+
+网络播放文件时，下载，播放等工作均有底层PVPlayer来完成
+
+网络多媒体文件需要采用异步准备，（prepareAsync();），该方法会立马返回结果，并在后台新开一个线程做准备工作。
+
+```java
+try{
+    MediaPlayer player = new MediaPlayer();
+    player.setDataSource(path);
+    player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+        @Override
+        public void onPrepared(MediaPlayer mp) {
+            mp.start();
+        }
+    });
+    player.prepareAsync();
+    }catch( Exception e){   {
+        e.printStackTrace();
+    }
+```
+
+### 5. 从资源文件播放
+
+将多媒体资源文件放在/res/raw目录下
+
+通过MediaPlayer.create()方法创建MediaPlayer对象
+
+```java
+MediaPlayer player =MediaPlayer.create(this, R.raw.mediatest);
+player.start();
+```
+
+```Java
+public static MediaPlayer create(Context context, Uri uri, SurfaceHolder holder,
+        AudioAttributes audioAttributes, int audioSessionId) {
+    try {
+        MediaPlayer mp = new MediaPlayer();     //通过new方法创建MediaPlayer对象
+        final AudioAttributes aa = audioAttributes != null ? audioAttributes :
+            new AudioAttributes.Builder().build();
+        mp.setAudioAttributes(aa);
+        mp.setAudioSessionId(audioSessionId);
+        mp.setDataSource(context, uri);
+        if (holder != null) {
+            mp.setDisplay(holder);
+        }
+        mp.prepare();
+        return mp;
+    } catch (IOException ex) {
+        Log.d(TAG, "create failed:", ex);
+    } catch (IllegalArgumentException ex) {
+        Log.d(TAG, "create failed:", ex);
+    } catch (SecurityException ex) {
+        Log.d(TAG, "create failed:", ex);
+    }
+    return null;
+}
+```
+
+### 6.MidiaPlayer 的重要属性
+
+```java
+ //返回值正在播放的媒体的持续时间(以毫秒为单位)
+ public static final String DURATION = "android.media.mediaplayer.durationMs";
+//
+private int mVideoWidth;
+private int mVideoHeight;
+```
+
+### 7.MidiaPlayer 重要方法
+
+```java
+//构造方法
+public class MediaPlayer extends PlayerBase implements SubtitleController.Listener,VolumeAutomation{}
+//create()方法
+public static MediaPlayer create(Context context, Uri uri, SurfaceHolder holder,
+            AudioAttributes audioAttributes, int audioSessionId) {}
+//两种准备方法
+public void prepare() throws IOException, IllegalStateException {}
+public native void prepareAsync() throws IllegalStateException;
+//开始、停止、暂停方法
+public void start() throws IllegalStateException {}
+public void stop() throws IllegalStateException {}
+public void pause() throws IllegalStateException {}
+//获取当前播放进度
+public native int getCurrentPosition();
+//拖拽到某一位置播放
+public void seekTo(long msec, @SeekMode int mode) {}
+//释放mediaplayer资源
+public void release() {}
+```
+
+### 8. MidiaPlayer 的主要监听器
+
+```Java
+//函数返回通过HTTP下载的媒体流的缓冲状态。接收到的缓冲百分比指示缓冲或播放了多少内容
+//例如，当已播放一半内容时，缓冲更新为80％表示要播放的下一个30％的内容已被缓冲。
+public interface OnBufferingUpdateListener
+{        void onBufferingUpdate(MediaPlayer mp, int percent);    }
+//在播放期间到达媒体源的末尾时调用。
+public interface OnCompletionListener
+{    void onCompletion(MediaPlayer mp);   }
+//当更改进度操作（seek）完成时被调用
+public interface OnSeekCompleteListener
+{    public void onSeekComplete(MediaPlayer mp);  }
+//当媒体文件准备好播放时调用。
+public interface OnPreparedListener
+    {        void onPrepared(MediaPlayer mp);   }
+//出错的时候调用
+public interface OnErrorListener
+    {        boolean onError(MediaPlayer mp, int what, int extra);    }
+```
+
